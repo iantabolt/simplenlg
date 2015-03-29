@@ -8,6 +8,8 @@ resourceDirectory in Compile := baseDirectory.value / "res"
 
 javaSource in Compile := baseDirectory.value / "src"
 
+scalaSource in Compile := baseDirectory.value / "scalasrc"
+
 javaSource in Test := baseDirectory.value / "testsrc"
 
 libraryDependencies ++= Seq(

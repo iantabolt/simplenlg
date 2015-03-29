@@ -442,7 +442,7 @@ public class WordElement extends NLGElement {
 			return (this.baseForm == we.baseForm || this.baseForm
 					.equals(we.baseForm))
 					&& (this.id == we.id || this.id.equals(we.id))
-					&& we.features.equals(this.features);
+					&& we.features().equals(this.features());
 		}
 
 		return false;

@@ -20,7 +20,6 @@ package simplenlg.framework;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -58,20 +57,10 @@ import simplenlg.features.Tense;
  */
 public abstract class NLGElement {
 
-	/** The category of this element. */
-	private ElementCategory category;
-
-	/** The features of this element. */
-	protected HashMap<String, Object> features = new HashMap<String, Object>();
-
-	/** The parent of this element. */
-	private NLGElement parent;
+    private NLGElementRepr self;
 
 	/** The realisation of this element. */
 	private String realisation;
-
-	/** The NLGFactory which created this element */
-	private NLGFactory factory;
 
 	/**
 	 * Sets the category of this element.
@@ -80,7 +69,7 @@ public abstract class NLGElement {
 	 *            the new <code>ElementCategory</code> for this element.
 	 */
 	public void setCategory(ElementCategory newCategory) {
-		this.category = newCategory;
+		this.self = new NLGElementRepr(newCategory, self.features(), self.parent(), self.factory());
 	}
 
 	/**
@@ -89,7 +78,7 @@ public abstract class NLGElement {
 	 * @return the category as a <code>ElementCategory</code>.
 	 */
 	public ElementCategory getCategory() {
-		return this.category;
+		return self.category();
 	}
 
 	/**
@@ -106,9 +95,9 @@ public abstract class NLGElement {
 	public void setFeature(String featureName, Object featureValue) {
 		if (featureName != null) {
 			if (featureValue == null) {
-				this.features.remove(featureName);
+				self.features().remove(featureName);
 			} else {
-				this.features.put(featureName, featureValue);
+				self.features().update(featureName, featureValue);
 			}
 		}
 	}
@@ -123,7 +112,7 @@ public abstract class NLGElement {
 	 */
 	public void setFeature(String featureName, boolean featureValue) {
 		if (featureName != null) {
-			this.features.put(featureName, new Boolean(featureValue));
+			self.features().update(featureName, featureValue);
 		}
 	}
 
@@ -137,7 +126,7 @@ public abstract class NLGElement {
 	 */
 	public void setFeature(String featureName, int featureValue) {
 		if (featureName != null) {
-			this.features.put(featureName, new Integer(featureValue));
+			self.features().update(featureName, featureValue);
 		}
 	}
 
@@ -151,7 +140,7 @@ public abstract class NLGElement {
 	 */
 	public void setFeature(String featureName, long featureValue) {
 		if (featureName != null) {
-			this.features.put(featureName, new Long(featureValue));
+			self.features().update(featureName, featureValue);
 		}
 	}
 
@@ -165,7 +154,7 @@ public abstract class NLGElement {
 	 */
 	public void setFeature(String featureName, float featureValue) {
 		if (featureName != null) {
-			this.features.put(featureName, new Float(featureValue));
+			self.features().update(featureName, featureValue);
 		}
 	}
 
@@ -180,7 +169,7 @@ public abstract class NLGElement {
 	 */
 	public void setFeature(String featureName, double featureValue) {
 		if (featureName != null) {
-			this.features.put(featureName, new Double(featureValue));
+			self.features().update(featureName, featureValue);
 		}
 	}
 
@@ -192,7 +181,7 @@ public abstract class NLGElement {
 	 * @return the <code>Object</code> value of the feature.
 	 */
 	public Object getFeature(String featureName) {
-		return featureName != null ? this.features.get(featureName) : null;
+		return featureName != null ? self.features().apply(featureName) : null;
 	}
 
 	/**
@@ -230,20 +219,17 @@ public abstract class NLGElement {
 	 * @return the <code>List</code> of <code>NLGElement</code>s
 	 */
 	public List<NLGElement> getFeatureAsElementList(String featureName) {
-		List<NLGElement> list = new ArrayList<NLGElement>();
+		List<NLGElement> list = new ArrayList<>();
 
 		Object value = getFeature(featureName);
 		if (value instanceof NLGElement) {
 			list.add((NLGElement) value);
 		} else if (value instanceof Collection<?>) {
-			Iterator<?> iterator = ((Collection<?>) value).iterator();
-			Object nextObject = null;
-			while (iterator.hasNext()) {
-				nextObject = iterator.next();
-				if (nextObject instanceof NLGElement) {
-					list.add((NLGElement) nextObject);
-				}
-			}
+            for (Object nextObject: (Collection<?>) value) {
+                if (nextObject instanceof NLGElement) {
+                    list.add((NLGElement) nextObject);
+                }
+            }
 		}
 		return list;
 	}
@@ -264,17 +250,12 @@ public abstract class NLGElement {
 	 * @return the <code>List</code> of <code>Object</code>s
 	 */
 	public List<Object> getFeatureAsList(String featureName) {
-		List<Object> values = new ArrayList<Object>();
+		List<Object> values = new ArrayList<>();
 		Object value = getFeature(featureName);
 		
 		if (value != null) {
 			if (value instanceof Collection<?>) {
-				Iterator<?> iterator = ((Collection<?>) value).iterator();
-				Object nextObject = null;
-				while (iterator.hasNext()) {
-					nextObject = iterator.next();
-					values.add(nextObject);
-				}
+                values.addAll((Collection<?>)value);
 			} else {
 				values.add(value);
 			}
@@ -300,13 +281,13 @@ public abstract class NLGElement {
 	 * @return the <code>List</code> of <code>String</code>s
 	 */
 	public List<String> getFeatureAsStringList(String featureName) {
-		List<String> values = new ArrayList<String>();
+		List<String> values = new ArrayList<>();
 		Object value = getFeature(featureName);
 
 		if (value != null) {
 			if (value instanceof Collection<?>) {
 				Iterator<?> iterator = ((Collection<?>) value).iterator();
-				Object nextObject = null;
+				Object nextObject;
 				while (iterator.hasNext()) {
 					nextObject = iterator.next();
 					values.add(nextObject.toString());
@@ -336,7 +317,7 @@ public abstract class NLGElement {
 		if (value instanceof Integer) {
 			intValue = (Integer) value;
 		} else if (value instanceof Number) {
-			intValue = new Integer(((Number) value).intValue());
+			intValue = ((Number) value).intValue();
 		} else if (value instanceof String) {
 			try {
 				intValue = new Integer((String) value);
@@ -364,7 +345,7 @@ public abstract class NLGElement {
 		if (value instanceof Long) {
 			longValue = (Long) value;
 		} else if (value instanceof Number) {
-			longValue = new Long(((Number) value).longValue());
+			longValue = ((Number) value).longValue();
 		} else if (value instanceof String) {
 			try {
 				longValue = new Long((String) value);
@@ -392,7 +373,7 @@ public abstract class NLGElement {
 		if (value instanceof Float) {
 			floatValue = (Float) value;
 		} else if (value instanceof Number) {
-			floatValue = new Float(((Number) value).floatValue());
+			floatValue = ((Number) value).floatValue();
 		} else if (value instanceof String) {
 			try {
 				floatValue = new Float((String) value);
@@ -420,7 +401,7 @@ public abstract class NLGElement {
 		if (value instanceof Double) {
 			doubleValue = (Double) value;
 		} else if (value instanceof Number) {
-			doubleValue = new Double(((Number) value).doubleValue());
+			doubleValue = ((Number) value).doubleValue();
 		} else if (value instanceof String) {
 			try {
 				doubleValue = new Double((String) value);
@@ -474,13 +455,17 @@ public abstract class NLGElement {
 		return elementValue;
 	}
 
+    public Features features() {
+        return self.features();
+    }
+
 	/**
 	 * Retrieves the map containing all the features for this element.
 	 * 
 	 * @return a <code>Map</code> of <code>String</code>, <code>Object</code>.
 	 */
 	public Map<String, Object> getAllFeatures() {
-		return this.features;
+		return self.features().asJava();
 	}
 
 	/**
@@ -492,8 +477,7 @@ public abstract class NLGElement {
 	 *         otherwise.
 	 */
 	public boolean hasFeature(String featureName) {
-		return featureName != null ? this.features.containsKey(featureName)
-				: false;
+		return featureName != null && self.features().containsKey(featureName);
 	}
 
 	/**
@@ -503,25 +487,25 @@ public abstract class NLGElement {
 	 *            the name of the feature to be removed.
 	 */
 	public void removeFeature(String featureName) {
-		this.features.remove(featureName);
+		self.features().remove(featureName);
 	}
 
 	/**
 	 * Deletes all the features in the map.
 	 */
 	public void clearAllFeatures() {
-		this.features.clear();
+		self.features().clear();
 	}
 
 	/**
 	 * Sets the parent element of this element.
-	 * 
+	 *
 	 * @param newParent
 	 *            the <code>NLGElement</code> that is the parent of this
 	 *            element.
 	 */
 	public void setParent(NLGElement newParent) {
-		this.parent = newParent;
+		this.self = new NLGElementRepr(self.category(), self.features(), newParent, self.factory());
 	}
 
 	/**
@@ -530,7 +514,7 @@ public abstract class NLGElement {
 	 * @return the <code>NLGElement</code> that is the parent of this element.
 	 */
 	public NLGElement getParent() {
-		return this.parent;
+		return self.parent();
 	}
 
 	/**
@@ -579,25 +563,18 @@ public abstract class NLGElement {
 	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer("{realisation=").append(this.realisation); //$NON-NLS-1$
-		if (this.category != null) {
-			buffer.append(", category=").append(this.category.toString()); //$NON-NLS-1$
+		if (self.category() != null) {
+			buffer.append(", category=").append(self.category().toString()); //$NON-NLS-1$
 		}
-		if (this.features != null) {
-			buffer.append(", features=").append(this.features.toString()); //$NON-NLS-1$
+		if (self.features() != null) {
+			buffer.append(", features=").append(self.features().toString()); //$NON-NLS-1$
 		}
 		buffer.append('}');
 		return buffer.toString();
 	}
 
 	public boolean isA(ElementCategory checkCategory) {
-		boolean isA = false;
-
-		if (this.category != null) {
-			isA = this.category.equalTo(checkCategory);
-		} else if (checkCategory == null) {
-			isA = true;
-		}
-		return isA;
+        return self.category() == checkCategory || self.category().equalTo(checkCategory);
 	}
 
 	/**
@@ -617,7 +594,7 @@ public abstract class NLGElement {
 	 *         feature names. The set is unordered.
 	 */
 	public Set<String> getAllFeatureNames() {
-		return this.features.keySet();
+		return self.features().keySet();
 	}
 
 	public String printTree(String indent) {
@@ -755,14 +732,14 @@ public abstract class NLGElement {
 	 */
 	@Deprecated
 	public boolean isNegated() {
-		return getFeatureAsBoolean(Feature.NEGATED).booleanValue();
+		return getFeatureAsBoolean(Feature.NEGATED);
 	}
 
 	/**
 	 * @return the NLG factory
 	 */
 	public NLGFactory getFactory() {
-		return factory;
+		return self.factory();
 	}
 
 	/**
@@ -770,7 +747,7 @@ public abstract class NLGElement {
 	 *            the NLG factory to set
 	 */
 	public void setFactory(NLGFactory factory) {
-		this.factory = factory;
+        this.self = new NLGElementRepr(self.category(), self.features(), self.parent(), factory);
 	}
 
 	/**
@@ -783,8 +760,8 @@ public abstract class NLGElement {
 
 		if (o instanceof NLGElement) {
 			NLGElement element = (NLGElement) o;
-			eq = this.category == element.category
-					&& this.features.equals(element.features);
+			eq = self.category() == element.self.factory()
+					&& self.features().equals(element.self.features());
 		}
 
 		return eq;

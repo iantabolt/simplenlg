@@ -106,20 +106,20 @@ public class VPPhraseSpec extends PhraseElement {
 		setFeature(Feature.FORM, Form.NORMAL);
 		setFeature(InternalFeature.REALISE_AUXILIARY, true);
 	}
-	
+
 	/** sets the verb (head) of a verb phrase.
 	 * Extract particle from verb if necessary
 	 * @param verb
 	 */
 	public void setVerb(Object verb) {
 		NLGElement verbElement;
-		
+
 		if (verb instanceof String) { // if String given, check for particle
 			int space = ((String) verb).indexOf(' ');
-			
+
 			if (space == -1) { // no space, so no particle
 				verbElement = getFactory().createWord(verb, LexicalCategory.VERB);
-			
+
 			} else { // space, so break up into verb and particle
 				verbElement = getFactory().createWord(((String) verb)
 						.substring(0, space), LexicalCategory.VERB);
