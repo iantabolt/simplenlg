@@ -42,7 +42,7 @@ import simplenlg.xmlrealiser.wrapper.DocumentRealisation;
 import simplenlg.xmlrealiser.wrapper.NLGSpec;
 import simplenlg.xmlrealiser.wrapper.RecordSet;
 
-import com.sun.xml.internal.bind.marshaller.NamespacePrefixMapper;
+import com.sun.xml.bind.marshaller.NamespacePrefixMapper;
 
 /**
  * A recording is a utility class that holds xml objects for testing the
